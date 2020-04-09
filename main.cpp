@@ -185,7 +185,7 @@ int main()
 			}
 			else
 			{
-				player_x += player_dx * cos(45) * player_speed;
+				player_x += player_dx * sin(45) * player_speed;
 				player_y += player_dy * sin(45) * player_speed;
 			}
 
