@@ -1,5 +1,8 @@
-#include<sstream>
 #include<cmath>
+#include<fstream>
+#include<iostream>
+#include<sstream>
+#include<string>
 #include<allegro5/allegro.h>
 #include<allegro5/allegro_native_dialog.h>
 #include<allegro5/allegro_font.h>
@@ -7,6 +10,8 @@
 #include<allegro5/allegro_image.h>
 
 using namespace std;
+
+stringstream ss;
 
 // General properties
 bool gameloop = true;
@@ -32,8 +37,43 @@ float player_speed = 2;
 int player_dx = 0, player_dy = 0;
 bool moving = false, diagonal = false, sprinting = false;
 
-// Debug
-stringstream str_str;
+// World properties
+const int tile_size = 32;
+int map_index_x = 0, map_index_y = 0;
+int map[25][19] = { 0 };
+
+void load_map(const char* filename)
+{
+	int map_width, map_x = 0, map_y = 0;
+	ss << "Game/" << filename;
+	ifstream mapfile(ss.str());
+	ss.str(string());
+	if (mapfile.is_open())
+	{
+		string line;
+		getline(mapfile, line);
+		line.erase(remove(line.begin(), line.end(), ' '), line.end());
+		map_width = line.length();
+		mapfile.seekg(0, ios::beg);
+		while (!mapfile.eof())
+		{
+			mapfile >> map[map_x][map_y];
+			map_x++;
+
+			if (map_x >= map_width)
+			{
+				map_x = 0;
+				map_y++;
+			}
+		}
+	}
+	else
+	{
+		al_show_native_message_box(NULL, "Error", NULL, "Failed to open map file", NULL, ALLEGRO_MESSAGEBOX_ERROR);
+	}
+}
+
+void draw_map(int map[25][19], ALLEGRO_BITMAP* tileset);
 
 int main()
 {
@@ -64,8 +104,20 @@ int main()
 	// Sprites
 	al_init_image_addon();
 
-	ALLEGRO_BITMAP* tiles = al_load_bitmap("Data/Sprites/tilemap_1.png");
+	ALLEGRO_BITMAP* tiles = al_load_bitmap("Data/Sprites/tiles.png");
 	ALLEGRO_BITMAP* player = al_load_bitmap("Data/Sprites/pc_base.png");
+
+	load_map("world.map");
+	/*
+	// FIXME
+	for (short int i = 0; i < 25; i++) // until we will learn how to load values into array from file, this is our map array initialization
+	{
+		for (short int j = 0; j < 19; j++)
+		{
+			map[i][j] = 1;
+		}
+	}
+	*/
 
 	// Keyboard
 	al_install_keyboard();
@@ -216,26 +268,30 @@ int main()
 		{
 			draw = false;
 			al_clear_to_color(black);
+
+			draw_map(map, tiles);
+
 			al_draw_bitmap_region(player, player_dir * 32, 0, 32, 64, player_x, player_y, NULL);
 
 			// if (debug_mode)
-			str_str << "X = " << player_x;
-			al_draw_text(advpix, magenta, 5, 5, NULL, str_str.str().c_str());
-			str_str.str(string());
-			str_str << "Y = " << player_y;
-			al_draw_text(advpix, magenta, 5, 15, NULL, str_str.str().c_str());
-			str_str.str(string());
-			str_str << "Moving = " << moving;
-			al_draw_text(advpix, magenta, 5, 25, NULL, str_str.str().c_str());
-			str_str.str(string());
-			str_str << "Sprinting = " << sprinting;
-			al_draw_text(advpix, magenta, 5, 35, NULL, str_str.str().c_str());
-			str_str.str(string());
+			ss << "X = " << player_x;
+			al_draw_text(advpix, magenta, 5, 5, NULL, ss.str().c_str());
+			ss.str(string());
+			ss << "Y = " << player_y;
+			al_draw_text(advpix, magenta, 5, 15, NULL, ss.str().c_str());
+			ss.str(string());
+			ss << "Moving = " << moving;
+			al_draw_text(advpix, magenta, 5, 25, NULL, ss.str().c_str());
+			ss.str(string());
+			ss << "Sprinting = " << sprinting;
+			al_draw_text(advpix, magenta, 5, 35, NULL, ss.str().c_str());
+			ss.str(string());
 
 			al_flip_display();
 		}
 	}
 
+	// Freeing memory
 	al_destroy_bitmap(player);
 	al_destroy_bitmap(tiles);
 	al_destroy_font(advpix);
@@ -245,4 +301,31 @@ int main()
 	al_destroy_display(display);
 
 	return 0;
+}
+
+void draw_map(int map[25][19], ALLEGRO_BITMAP* tileset)
+{
+	int tileset_row_tiles_number = al_get_bitmap_width(tileset) / tile_size;
+	int tile_id, tile_x = 0, tile_y = 0;
+	float id_to_row_number_ratio;
+	for (short int i = 0; i < 25; i++)
+	{
+		for (short int j = 0; j < 19; j++)
+		{
+			//cout << map[i][j];
+			tile_id = map[i][j];
+			if (tile_id >= tileset_row_tiles_number)
+			{
+				tile_x = tile_id - tileset_row_tiles_number;
+				id_to_row_number_ratio = tile_id / tileset_row_tiles_number;
+				tile_y = (int)id_to_row_number_ratio;
+			}
+			else
+			{
+				tile_x = tile_id;
+			}
+			al_draw_bitmap_region(tileset, tile_x*tile_size, tile_y*tile_size, tile_size, tile_size, i*tile_size, j*tile_size, NULL);
+		}
+		//cout << endl;
+	}
 }
