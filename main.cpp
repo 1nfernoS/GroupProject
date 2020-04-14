@@ -108,16 +108,6 @@ int main()
 	ALLEGRO_BITMAP* player = al_load_bitmap("Data/Sprites/pc_base.png");
 
 	load_map("world.map");
-	/*
-	// FIXME
-	for (short int i = 0; i < 25; i++) // until we will learn how to load values into array from file, this is our map array initialization
-	{
-		for (short int j = 0; j < 19; j++)
-		{
-			map[i][j] = 1;
-		}
-	}
-	*/
 
 	// Keyboard
 	al_install_keyboard();
