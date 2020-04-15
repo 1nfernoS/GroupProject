@@ -39,6 +39,7 @@ bool moving = false, diagonal = false, sprinting = false;
 
 // World properties
 const int tile_size = 32;
+int player_start_position_difference_x = 0, player_start_position_difference_y = 0;
 int map_index_x = 0, map_index_y = 0;
 int map[25][19] = { 0 };
 
@@ -231,23 +232,27 @@ int main()
 				player_y += player_dy * sin(45) * player_speed;
 			}
 
-			// Window borders limits for movement
-			if (player_x < -5)
+			// Player sprite screen position limits and map scrolling
+			if (player_x < display_w / 4)
 			{
-				player_x = -5;
+				player_start_position_difference_x += player_speed;
+				player_x = display_w / 4;
 			}
-			else if (player_x > display_w - 32 + 5)
+			else if (player_x > display_w - display_w / 4 - 32)
 			{
-				player_x = display_w - 32 + 5;
+				player_start_position_difference_x -= player_speed;
+				player_x = display_w - display_w / 4 - 32;
 			}
 
-			if (player_y < -3)
+			if (player_y < display_h / 4)
 			{
-				player_y = -3;
+				player_start_position_difference_y += player_speed;
+				player_y = display_h / 4;
 			}
-			else if (player_y > display_h - 64 + 3)
+			else if (player_y > display_h - display_w / 4 - 64)
 			{
-				player_y = display_h - 64 + 3;
+				player_start_position_difference_y -= player_speed;
+				player_y = display_h - display_w / 4 - 64;
 			}
 
 			draw = true;
@@ -314,7 +319,7 @@ void draw_map(int map[25][19], ALLEGRO_BITMAP* tileset)
 			{
 				tile_x = tile_id;
 			}
-			al_draw_bitmap_region(tileset, tile_x*tile_size, tile_y*tile_size, tile_size, tile_size, i*tile_size, j*tile_size, NULL);
+			al_draw_bitmap_region(tileset, tile_x*tile_size, tile_y*tile_size, tile_size, tile_size, i*tile_size + player_start_position_difference_x, j*tile_size + player_start_position_difference_y, NULL);
 		}
 		//cout << endl;
 	}
