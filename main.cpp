@@ -17,19 +17,18 @@ stringstream ss;
 bool gameloop = true;
 
 // Display properties
-int display_w = 800;
-int display_h = 600;
+int display_w = 800, display_h = 600;
 
 float fps = 60.0;
 
 // Keyboard controls properties
-int key_up = ALLEGRO_KEY_UP, key_down = ALLEGRO_KEY_DOWN, key_right = ALLEGRO_KEY_RIGHT, key_left = ALLEGRO_KEY_LEFT;
-int key_sprint = ALLEGRO_KEY_LSHIFT;
+int key_up = ALLEGRO_KEY_UP, key_down = ALLEGRO_KEY_DOWN, key_right = ALLEGRO_KEY_RIGHT, key_left = ALLEGRO_KEY_LEFT, key_sprint = ALLEGRO_KEY_LSHIFT;
 const int key_back = ALLEGRO_KEY_ESCAPE;
 
 enum directions { LEFT, DOWN, RIGHT, UP };
 
 // Player properties
+const int player_w = 32, player_h = 64;
 float player_x = display_w / 2 - 16, player_y = display_h / 2 - 32;
 int player_dir = DOWN;
 const float player_walk_speed = 2, player_sprint_speed = 3;
@@ -52,10 +51,10 @@ void load_map(const char* filename)
 	if (mapfile.is_open())
 	{
 		string line;
-		getline(mapfile, line);
-		line.erase(remove(line.begin(), line.end(), ' '), line.end());
-		map_width = line.length();
-		mapfile.seekg(0, ios::beg);
+		getline(mapfile, line); // gets first line from the map file
+		line.erase(remove(line.begin(), line.end(), ' '), line.end()); // removes empty spaces in line
+		map_width = line.length(); // gets map width in tiles
+		mapfile.seekg(0, ios::beg); // returns to the beginning of the file
 		while (!mapfile.eof())
 		{
 			mapfile >> map[map_x][map_y];
@@ -115,6 +114,13 @@ int main()
 
 	ALLEGRO_KEYBOARD_STATE key_state;
 
+	// Joystick
+	al_install_joystick();
+
+	ALLEGRO_JOYSTICK* joy = al_get_joystick(0);
+
+	ALLEGRO_JOYSTICK_STATE joy_state;
+
 	// Display creation
 	display = al_create_display(display_w, display_h);
 	al_set_new_display_flags(ALLEGRO_WINDOWED);
@@ -128,6 +134,7 @@ int main()
 
 	al_register_event_source(queue, al_get_display_event_source(display));
 	al_register_event_source(queue, al_get_keyboard_event_source());
+	al_register_event_source(queue, al_get_joystick_event_source());
 	al_register_event_source(queue, al_get_timer_event_source(timer));
 
 	al_start_timer(timer);
@@ -153,13 +160,14 @@ int main()
 		if (event.type == ALLEGRO_EVENT_TIMER)
 		{
 			al_get_keyboard_state(&key_state);
+			al_get_joystick_state(joy, &joy_state);
 
-			if (al_key_down(&key_state, key_left) && !al_key_down(&key_state, key_right))
+			if (al_key_down(&key_state, key_left) && !al_key_down(&key_state, key_right) || joy_state.stick[0].axis[0] < 0 || joy_state.stick[2].axis[0] < 0)
 			{
 				player_dir = LEFT;
 				player_dx = -1;
 			}
-			else if (al_key_down(&key_state, key_right) && !al_key_down(&key_state, key_left))
+			else if (al_key_down(&key_state, key_right) && !al_key_down(&key_state, key_left) || joy_state.stick[0].axis[0] > 0 || joy_state.stick[2].axis[0] > 0)
 			{
 				player_dir = RIGHT;
 				player_dx = 1;
@@ -169,12 +177,12 @@ int main()
 				player_dx = 0;
 			}
 
-			if (al_key_down(&key_state, key_up) && !al_key_down(&key_state, key_down))
+			if (al_key_down(&key_state, key_up) && !al_key_down(&key_state, key_down) || joy_state.stick[0].axis[1] < 0 || joy_state.stick[2].axis[1] < 0)
 			{
 				player_dir = UP;
 				player_dy = -1;
 			}
-			else if (al_key_down(&key_state, key_down) && !al_key_down(&key_state, key_up))
+			else if (al_key_down(&key_state, key_down) && !al_key_down(&key_state, key_up) || joy_state.stick[0].axis[1] > 0 || joy_state.stick[2].axis[1] > 0)
 			{
 				player_dir = DOWN;
 				player_dy = 1;
@@ -193,7 +201,7 @@ int main()
 				diagonal = false;
 			}
 
-			if (al_key_down(&key_state, key_sprint))
+			if (al_key_down(&key_state, key_sprint) || joy_state.button[5])
 			{
 				sprinting = true;
 			}
@@ -238,10 +246,10 @@ int main()
 				player_start_position_difference_x += player_speed;
 				player_x = display_w / 4;
 			}
-			else if (player_x > display_w - display_w / 4 - 32)
+			else if (player_x > display_w - display_w / 4 - player_w)
 			{
 				player_start_position_difference_x -= player_speed;
-				player_x = display_w - display_w / 4 - 32;
+				player_x = display_w - display_w / 4 - player_w;
 			}
 
 			if (player_y < display_h / 4)
@@ -249,10 +257,10 @@ int main()
 				player_start_position_difference_y += player_speed;
 				player_y = display_h / 4;
 			}
-			else if (player_y > display_h - display_w / 4 - 64)
+			else if (player_y > display_h - display_w / 4 - player_h)
 			{
 				player_start_position_difference_y -= player_speed;
-				player_y = display_h - display_w / 4 - 64;
+				player_y = display_h - display_w / 4 - player_h;
 			}
 
 			draw = true;
@@ -281,6 +289,9 @@ int main()
 			ss << "Sprinting = " << sprinting;
 			al_draw_text(advpix, magenta, 5, 35, NULL, ss.str().c_str());
 			ss.str(string());
+			ss << "Joysticks detected: " << al_get_num_joysticks();
+			al_draw_text(advpix, magenta, 5, 55, NULL, ss.str().c_str());
+			ss.str(string());
 
 			al_flip_display();
 		}
@@ -292,6 +303,7 @@ int main()
 	al_destroy_font(advpix);
 	al_destroy_event_queue(queue);
 	al_destroy_timer(timer);
+	al_uninstall_joystick();
 	al_uninstall_keyboard();
 	al_destroy_display(display);
 
@@ -307,7 +319,6 @@ void draw_map(int map[25][19], ALLEGRO_BITMAP* tileset)
 	{
 		for (short int j = 0; j < 19; j++)
 		{
-			//cout << map[i][j];
 			tile_id = map[i][j];
 			if (tile_id >= tileset_row_tiles_number)
 			{
@@ -319,8 +330,7 @@ void draw_map(int map[25][19], ALLEGRO_BITMAP* tileset)
 			{
 				tile_x = tile_id;
 			}
-			al_draw_bitmap_region(tileset, tile_x*tile_size, tile_y*tile_size, tile_size, tile_size, i*tile_size + player_start_position_difference_x, j*tile_size + player_start_position_difference_y, NULL);
+			al_draw_bitmap_region(tileset, tile_x * tile_size, tile_y * tile_size, tile_size, tile_size, i * tile_size + player_start_position_difference_x, j * tile_size + player_start_position_difference_y, NULL);
 		}
-		//cout << endl;
 	}
 }
