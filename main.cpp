@@ -69,7 +69,7 @@ void load_map(const char* filename)
 	}
 	else
 	{
-		al_show_native_message_box(NULL, "Error", NULL, "Failed to open map file", NULL, ALLEGRO_MESSAGEBOX_ERROR);
+		al_show_native_message_box(NULL, "Error", "Failed to open map file", NULL, NULL, ALLEGRO_MESSAGEBOX_ERROR);
 	}
 }
 
@@ -87,12 +87,11 @@ int main()
 
 	if (!al_init())
 	{
-		al_show_native_message_box(NULL, "Error", NULL, "Failed to initialize Allegro 5", NULL, ALLEGRO_MESSAGEBOX_ERROR);
+		al_show_native_message_box(NULL, "Error", "Failed to initialize Allegro 5", NULL, NULL, ALLEGRO_MESSAGEBOX_ERROR);
 	}
 
 	// Colors
 	ALLEGRO_COLOR black = al_map_rgb(0, 0, 0);
-	ALLEGRO_COLOR magenta = al_map_rgb(255, 0, 255);
 	ALLEGRO_COLOR white = al_map_rgb(255, 255, 255);
 
 	// Fonts
@@ -117,7 +116,18 @@ int main()
 	// Joystick
 	al_install_joystick();
 
-	ALLEGRO_JOYSTICK* joy = al_get_joystick(0);
+	ALLEGRO_JOYSTICK* joy;
+
+	bool joystick_connected;
+
+	if (al_get_num_joysticks() != 0)
+	{
+		joy = al_get_joystick(0);
+	}
+	else
+	{
+		joy = NULL;
+	}
 
 	ALLEGRO_JOYSTICK_STATE joy_state;
 
@@ -148,26 +158,40 @@ int main()
 		{
 			gameloop = false;
 		}
-		if (event.type == ALLEGRO_EVENT_KEY_DOWN)
+		if (event.type == ALLEGRO_EVENT_KEY_DOWN && event.keyboard.keycode == ALLEGRO_KEY_ESCAPE)
 		{
-			switch (event.keyboard.keycode)
-			{
-			case key_back:
-				gameloop = false;
-			}
+			gameloop = false;
+		}
+
+		if (al_get_num_joysticks() != 0)
+		{
+			joystick_connected = true;
+		}
+		else
+		{
+			joystick_connected = false;
+		}
+
+		if (event.type == ALLEGRO_EVENT_JOYSTICK_CONFIGURATION)
+		{
+			al_reconfigure_joysticks();
+			joy = al_get_joystick(0);
 		}
 
 		if (event.type == ALLEGRO_EVENT_TIMER)
 		{
 			al_get_keyboard_state(&key_state);
-			al_get_joystick_state(joy, &joy_state);
+			if (al_get_num_joysticks() != 0)
+			{
+				al_get_joystick_state(joy, &joy_state);
+			}
 
-			if (al_key_down(&key_state, key_left) && !al_key_down(&key_state, key_right) || joy_state.stick[0].axis[0] < 0 || joy_state.stick[2].axis[0] < 0)
+			if (al_key_down(&key_state, key_left) && !al_key_down(&key_state, key_right) || (joystick_connected && joy_state.stick[0].axis[0] < 0) || (joystick_connected && joy_state.stick[2].axis[0] < 0))
 			{
 				player_dir = LEFT;
 				player_dx = -1;
 			}
-			else if (al_key_down(&key_state, key_right) && !al_key_down(&key_state, key_left) || joy_state.stick[0].axis[0] > 0 || joy_state.stick[2].axis[0] > 0)
+			else if (al_key_down(&key_state, key_right) && !al_key_down(&key_state, key_left) || (joystick_connected && joy_state.stick[0].axis[0] > 0) || (joystick_connected && joy_state.stick[2].axis[0] > 0))
 			{
 				player_dir = RIGHT;
 				player_dx = 1;
@@ -177,12 +201,12 @@ int main()
 				player_dx = 0;
 			}
 
-			if (al_key_down(&key_state, key_up) && !al_key_down(&key_state, key_down) || joy_state.stick[0].axis[1] < 0 || joy_state.stick[2].axis[1] < 0)
+			if (al_key_down(&key_state, key_up) && !al_key_down(&key_state, key_down) || (joystick_connected && joy_state.stick[0].axis[1] < 0) || (joystick_connected && joy_state.stick[2].axis[1] < 0))
 			{
 				player_dir = UP;
 				player_dy = -1;
 			}
-			else if (al_key_down(&key_state, key_down) && !al_key_down(&key_state, key_up) || joy_state.stick[0].axis[1] > 0 || joy_state.stick[2].axis[1] > 0)
+			else if (al_key_down(&key_state, key_down) && !al_key_down(&key_state, key_up) || (joystick_connected && joy_state.stick[0].axis[1] > 0) || (joystick_connected && joy_state.stick[2].axis[1] > 0))
 			{
 				player_dir = DOWN;
 				player_dy = 1;
@@ -201,7 +225,7 @@ int main()
 				diagonal = false;
 			}
 
-			if (al_key_down(&key_state, key_sprint) || joy_state.button[5])
+			if (al_key_down(&key_state, key_sprint) || (joystick_connected && joy_state.button[5]))
 			{
 				sprinting = true;
 			}
@@ -278,19 +302,19 @@ int main()
 
 			// if (debug_mode)
 			ss << "X = " << player_x;
-			al_draw_text(advpix, magenta, 5, 5, NULL, ss.str().c_str());
+			al_draw_text(advpix, white, 5, 5, NULL, ss.str().c_str());
 			ss.str(string());
 			ss << "Y = " << player_y;
-			al_draw_text(advpix, magenta, 5, 15, NULL, ss.str().c_str());
+			al_draw_text(advpix, white, 5, 15, NULL, ss.str().c_str());
 			ss.str(string());
 			ss << "Moving = " << moving;
-			al_draw_text(advpix, magenta, 5, 25, NULL, ss.str().c_str());
+			al_draw_text(advpix, white, 5, 25, NULL, ss.str().c_str());
 			ss.str(string());
 			ss << "Sprinting = " << sprinting;
-			al_draw_text(advpix, magenta, 5, 35, NULL, ss.str().c_str());
+			al_draw_text(advpix, white, 5, 35, NULL, ss.str().c_str());
 			ss.str(string());
 			ss << "Joysticks detected: " << al_get_num_joysticks();
-			al_draw_text(advpix, magenta, 5, 55, NULL, ss.str().c_str());
+			al_draw_text(advpix, white, 5, 55, NULL, ss.str().c_str());
 			ss.str(string());
 
 			al_flip_display();
