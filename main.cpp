@@ -1,3 +1,4 @@
+#include<algorithm>
 #include<cmath>
 #include<fstream>
 #include<iostream>
@@ -9,9 +10,7 @@
 #include<allegro5/allegro_ttf.h>
 #include<allegro5/allegro_image.h>
 
-using namespace std;
-
-stringstream ss;
+std::stringstream ss;
 
 // General properties
 bool gameloop = true;
@@ -46,15 +45,15 @@ void load_map(const char* filename)
 {
 	int map_width, map_x = 0, map_y = 0;
 	ss << "Game/" << filename;
-	ifstream mapfile(ss.str());
-	ss.str(string());
+	std::ifstream mapfile(ss.str());
+	ss.str(std::string());
 	if (mapfile.is_open())
 	{
-		string line;
+		std::string line;
 		getline(mapfile, line); // gets first line from the map file
-		line.erase(remove(line.begin(), line.end(), ' '), line.end()); // removes empty spaces in line
+		line.erase(std::remove(line.begin(), line.end(), ' '), line.end()); // removes empty spaces in line
 		map_width = line.length(); // gets map width in tiles
-		mapfile.seekg(0, ios::beg); // returns to the beginning of the file
+		mapfile.seekg(0, std::ios::beg); // returns to the beginning of the file
 		while (!mapfile.eof())
 		{
 			mapfile >> map[map_x][map_y];
@@ -303,19 +302,19 @@ int main()
 			// if (debug_mode)
 			ss << "X = " << player_x;
 			al_draw_text(advpix, white, 5, 5, NULL, ss.str().c_str());
-			ss.str(string());
+			ss.str(std::string());
 			ss << "Y = " << player_y;
 			al_draw_text(advpix, white, 5, 15, NULL, ss.str().c_str());
-			ss.str(string());
+			ss.str(std::string());
 			ss << "Moving = " << moving;
 			al_draw_text(advpix, white, 5, 25, NULL, ss.str().c_str());
-			ss.str(string());
+			ss.str(std::string());
 			ss << "Sprinting = " << sprinting;
 			al_draw_text(advpix, white, 5, 35, NULL, ss.str().c_str());
-			ss.str(string());
+			ss.str(std::string());
 			ss << "Joysticks detected: " << al_get_num_joysticks();
 			al_draw_text(advpix, white, 5, 55, NULL, ss.str().c_str());
-			ss.str(string());
+			ss.str(std::string());
 
 			al_flip_display();
 		}
