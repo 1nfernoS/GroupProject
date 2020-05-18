@@ -10,21 +10,22 @@
 #include<allegro5/allegro_ttf.h>
 #include<allegro5/allegro_image.h>
 
-std::stringstream ss;
-
 // General properties
 bool gameloop = true;
 
 // Display properties
 int display_w = 800, display_h = 600;
 
-float fps = 60.0;
+float fps = 60.0f;
 
 // Keyboard controls properties
 int key_up = ALLEGRO_KEY_UP, key_down = ALLEGRO_KEY_DOWN, key_right = ALLEGRO_KEY_RIGHT, key_left = ALLEGRO_KEY_LEFT, key_sprint = ALLEGRO_KEY_LSHIFT;
 const int key_back = ALLEGRO_KEY_ESCAPE;
 
-enum directions { LEFT, DOWN, RIGHT, UP };
+enum directions : char
+{
+	LEFT = 0, DOWN, RIGHT, UP
+};
 
 // Player properties
 const int player_w = 32, player_h = 64;
@@ -43,10 +44,11 @@ int map[25][19] = { 0 };
 
 void load_map(const char* filename)
 {
+	std::stringstream sstream;
 	int map_width, map_x = 0, map_y = 0;
-	ss << "Game/" << filename;
-	std::ifstream mapfile(ss.str());
-	ss.str(std::string());
+	sstream << "Game/" << filename;
+	std::ifstream mapfile(sstream.str());
+	sstream.str(std::string());
 	if (mapfile.is_open())
 	{
 		std::string line;
@@ -76,6 +78,8 @@ void draw_map(int map[25][19], ALLEGRO_BITMAP* tileset);
 
 int main()
 {
+	std::stringstream ss;
+	
 	ALLEGRO_DISPLAY* display;
 
 	ALLEGRO_EVENT_QUEUE* queue;
