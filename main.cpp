@@ -356,6 +356,7 @@ void draw_map(int map[25][19], ALLEGRO_BITMAP* tileset)
 			else
 			{
 				tile_x = tile_id;
+				tile_y = 0;
 			}
 			al_draw_bitmap_region(tileset, tile_x * tile_size, tile_y * tile_size, tile_size, tile_size, i * tile_size + player_start_position_difference_x, j * tile_size + player_start_position_difference_y, NULL);
 		}
