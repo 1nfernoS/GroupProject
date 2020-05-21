@@ -34,7 +34,7 @@ int player_dir = DOWN;
 const float player_walk_speed = 2, player_sprint_speed = 3;
 float player_speed = 2;
 int player_dx = 0, player_dy = 0;
-bool moving = false, diagonal = false, sprinting = false;
+bool moving = false, sprinting = false;
 
 // World properties
 const int tile_size = 32;
@@ -45,7 +45,7 @@ int map[25][19] = { 0 };
 void load_map(const char* filename)
 {
 	std::stringstream sstream;
-	int map_width, map_x = 0, map_y = 0;
+	int map_width = 0, map_x = 0, map_y = 0;
 	sstream << "Game/" << filename;
 	std::ifstream mapfile(sstream.str());
 	sstream.str(std::string());
@@ -53,8 +53,14 @@ void load_map(const char* filename)
 	{
 		std::string line;
 		getline(mapfile, line); // gets first line from the map file
-		line.erase(std::remove(line.begin(), line.end(), ' '), line.end()); // removes empty spaces in line
-		map_width = line.length(); // gets map width in tiles
+		for (unsigned int i = 0; i < line.length(); i++)
+		{
+			if (line[i] == ' ') // gets map width in tiles
+			{
+				map_width++;
+			}
+		}
+		map_width++;
 		mapfile.seekg(0, std::ios::beg); // returns to the beginning of the file
 		while (!mapfile.eof())
 		{
@@ -67,6 +73,7 @@ void load_map(const char* filename)
 				map_y++;
 			}
 		}
+		std::cout << "Loaded \"" << filename << "\" " << map_width << "x" << map_y << "\n";
 	}
 	else
 	{
@@ -92,6 +99,15 @@ int main()
 	{
 		al_show_native_message_box(NULL, "Error", "Failed to initialize Allegro 5", NULL, NULL, ALLEGRO_MESSAGEBOX_ERROR);
 	}
+
+	// Display creation
+	display = al_create_display(display_w, display_h);
+	if (!display)
+	{
+		al_show_native_message_box(NULL, "Error", "Failed to create a display", NULL, NULL, ALLEGRO_MESSAGEBOX_ERROR);
+	}
+	al_set_new_display_flags(ALLEGRO_WINDOWED);
+	al_set_window_title(display, "Pointless Expedition");
 
 	// Colors
 	ALLEGRO_COLOR black = al_map_rgb(0, 0, 0);
@@ -133,11 +149,6 @@ int main()
 	}
 
 	ALLEGRO_JOYSTICK_STATE joy_state;
-
-	// Display creation
-	display = al_create_display(display_w, display_h);
-	al_set_new_display_flags(ALLEGRO_WINDOWED);
-	al_set_window_title(display, "Pointless Expedition");
 
 	// Event queue creation
 	queue = al_create_event_queue();
@@ -219,15 +230,6 @@ int main()
 				player_dy = 0;
 			}
 
-			if (player_dx != 0 && (abs(player_dx) == abs(player_dy)))
-			{
-				diagonal = true;
-			}
-			else
-			{
-				diagonal = false;
-			}
-
 			if (al_key_down(&key_state, key_sprint) || (joystick_connected && joy_state.button[5]))
 			{
 				sprinting = true;
@@ -256,7 +258,7 @@ int main()
 				player_speed = player_walk_speed;
 			}
 
-			if (!diagonal)
+			if (!(abs(player_dx) != 0 && abs(player_dy) != 0))
 			{
 				player_x += player_dx * player_speed;
 				player_y += player_dy * player_speed;
@@ -307,8 +309,14 @@ int main()
 			ss << "X = " << player_x;
 			al_draw_text(advpix, white, 5, 5, NULL, ss.str().c_str());
 			ss.str(std::string());
+			ss << "DX = " << player_dx;
+			al_draw_text(advpix, white, 100, 5, NULL, ss.str().c_str());
+			ss.str(std::string());
 			ss << "Y = " << player_y;
 			al_draw_text(advpix, white, 5, 15, NULL, ss.str().c_str());
+			ss.str(std::string());
+			ss << "DY = " << player_dy;
+			al_draw_text(advpix, white, 100, 15, NULL, ss.str().c_str());
 			ss.str(std::string());
 			ss << "Moving = " << moving;
 			al_draw_text(advpix, white, 5, 25, NULL, ss.str().c_str());
@@ -347,6 +355,10 @@ void draw_map(int map[25][19], ALLEGRO_BITMAP* tileset)
 		for (short int j = 0; j < 19; j++)
 		{
 			tile_id = map[i][j];
+			if (tile_id == -1)
+			{
+				continue;
+			}
 			if (tile_id >= tileset_row_tiles_number)
 			{
 				tile_x = tile_id - tileset_row_tiles_number;
