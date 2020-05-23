@@ -38,9 +38,10 @@ bool moving = false, sprinting = false;
 
 // World properties
 const int tile_size = 32;
+int tilemap_w;
 int player_start_position_difference_x = 0, player_start_position_difference_y = 0;
 int map_index_x = 0, map_index_y = 0;
-int map[25][19] = { 0 };
+int map[32][32] = { 0 };
 
 void load_map(const char* filename)
 {
@@ -81,7 +82,7 @@ void load_map(const char* filename)
 	}
 }
 
-void draw_map(int map[25][19], ALLEGRO_BITMAP* tileset);
+void draw_map(int map[32][32], ALLEGRO_BITMAP* tileset);
 
 int main()
 {
@@ -122,7 +123,9 @@ int main()
 	// Sprites
 	al_init_image_addon();
 
-	ALLEGRO_BITMAP* tiles = al_load_bitmap("Data/Sprites/tiles.png");
+	ALLEGRO_BITMAP* tilemap = al_load_bitmap("Data/Sprites/tilemap_overworld.png");
+	tilemap_w = al_get_bitmap_width(tilemap) / tile_size;
+
 	ALLEGRO_BITMAP* player = al_load_bitmap("Data/Sprites/pc_base.png");
 
 	load_map("world.map");
@@ -301,7 +304,7 @@ int main()
 			draw = false;
 			al_clear_to_color(black);
 
-			draw_map(map, tiles);
+			draw_map(map, tilemap);
 
 			al_draw_bitmap_region(player, player_dir * 32, 0, 32, 64, player_x, player_y, NULL);
 
@@ -334,7 +337,7 @@ int main()
 
 	// Freeing memory
 	al_destroy_bitmap(player);
-	al_destroy_bitmap(tiles);
+	al_destroy_bitmap(tilemap);
 	al_destroy_font(advpix);
 	al_destroy_event_queue(queue);
 	al_destroy_timer(timer);
@@ -345,24 +348,23 @@ int main()
 	return 0;
 }
 
-void draw_map(int map[25][19], ALLEGRO_BITMAP* tileset)
+void draw_map(int map[32][32], ALLEGRO_BITMAP* tileset)
 {
-	int tileset_row_tiles_number = al_get_bitmap_width(tileset) / tile_size;
 	int tile_id, tile_x = 0, tile_y = 0;
 	float id_to_row_number_ratio;
-	for (short int i = 0; i < 25; i++)
+	for (short int i = 0; i < 32; i++)
 	{
-		for (short int j = 0; j < 19; j++)
+		for (short int j = 0; j < 32; j++)
 		{
 			tile_id = map[i][j];
 			if (tile_id == -1)
 			{
 				continue;
 			}
-			if (tile_id >= tileset_row_tiles_number)
+			if (tile_id >= tilemap_w)
 			{
-				tile_x = tile_id - tileset_row_tiles_number;
-				id_to_row_number_ratio = tile_id / tileset_row_tiles_number;
+				tile_x = tile_id - tilemap_w;
+				id_to_row_number_ratio = tile_id / tilemap_w;
 				tile_y = (int)id_to_row_number_ratio;
 			}
 			else
