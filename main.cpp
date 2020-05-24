@@ -39,7 +39,7 @@ bool moving = false, sprinting = false;
 // World properties
 const int tile_size = 32;
 int tilemap_w;
-int player_start_position_difference_x = 0, player_start_position_difference_y = 0;
+int location_offset_x = 0, location_offset_y = 0;
 int map_index_x = 0, map_index_y = 0;
 int map[32][32] = { 0 };
 
@@ -197,49 +197,98 @@ int main()
 
 		if (event.type == ALLEGRO_EVENT_TIMER)
 		{
-			al_get_keyboard_state(&key_state);
-			if (al_get_num_joysticks() != 0)
+			if (joystick_connected)
 			{
 				al_get_joystick_state(joy, &joy_state);
 			}
-
-			if (al_key_down(&key_state, key_left) && !al_key_down(&key_state, key_right) || (joystick_connected && joy_state.stick[0].axis[0] < 0) || (joystick_connected && joy_state.stick[2].axis[0] < 0))
-			{
-				player_dir = LEFT;
-				player_dx = -1;
-			}
-			else if (al_key_down(&key_state, key_right) && !al_key_down(&key_state, key_left) || (joystick_connected && joy_state.stick[0].axis[0] > 0) || (joystick_connected && joy_state.stick[2].axis[0] > 0))
-			{
-				player_dir = RIGHT;
-				player_dx = 1;
-			}
 			else
 			{
-				player_dx = 0;
+				al_get_keyboard_state(&key_state);
 			}
 
-			if (al_key_down(&key_state, key_up) && !al_key_down(&key_state, key_down) || (joystick_connected && joy_state.stick[0].axis[1] < 0) || (joystick_connected && joy_state.stick[2].axis[1] < 0))
+			// Gamepad input
+			if (joystick_connected)
 			{
-				player_dir = UP;
-				player_dy = -1;
-			}
-			else if (al_key_down(&key_state, key_down) && !al_key_down(&key_state, key_up) || (joystick_connected && joy_state.stick[0].axis[1] > 0) || (joystick_connected && joy_state.stick[2].axis[1] > 0))
-			{
-				player_dir = DOWN;
-				player_dy = 1;
-			}
-			else
-			{
-				player_dy = 0;
-			}
+				if ((joy_state.stick[0].axis[0] < 0) || (joy_state.stick[2].axis[0] < 0))
+				{
+					player_dir = LEFT;
+					player_dx = -1;
+				}
+				else if ((joy_state.stick[0].axis[0] > 0) || (joy_state.stick[2].axis[0] > 0))
+				{
+					player_dir = RIGHT;
+					player_dx = 1;
+				}
+				else
+				{
+					player_dx = 0;
+				}
 
-			if (al_key_down(&key_state, key_sprint) || (joystick_connected && joy_state.button[5]))
-			{
-				sprinting = true;
+				if ((joy_state.stick[0].axis[1] < 0) || (joy_state.stick[2].axis[1] < 0))
+				{
+					player_dir = UP;
+					player_dy = -1;
+				}
+				else if ((joy_state.stick[0].axis[1] > 0) || (joy_state.stick[2].axis[1] > 0))
+				{
+					player_dir = DOWN;
+					player_dy = 1;
+				}
+				else
+				{
+					player_dy = 0;
+				}
+
+				if (joy_state.button[5])
+				{
+					sprinting = true;
+				}
+				else
+				{
+					sprinting = false;
+				}
 			}
+			// Keyboard input
 			else
 			{
-				sprinting = false;
+				if (al_key_down(&key_state, key_left) && !al_key_down(&key_state, key_right))
+				{
+					player_dir = LEFT;
+					player_dx = -1;
+				}
+				else if (al_key_down(&key_state, key_right) && !al_key_down(&key_state, key_left))
+				{
+					player_dir = RIGHT;
+					player_dx = 1;
+				}
+				else
+				{
+					player_dx = 0;
+				}
+
+				if (al_key_down(&key_state, key_up) && !al_key_down(&key_state, key_down))
+				{
+					player_dir = UP;
+					player_dy = -1;
+				}
+				else if (al_key_down(&key_state, key_down) && !al_key_down(&key_state, key_up))
+				{
+					player_dir = DOWN;
+					player_dy = 1;
+				}
+				else
+				{
+					player_dy = 0;
+				}
+
+				if (al_key_down(&key_state, key_sprint))
+				{
+					sprinting = true;
+				}
+				else
+				{
+					sprinting = false;
+				}
 			}
 
 			if (player_dx != 0 || player_dy != 0)
@@ -275,23 +324,23 @@ int main()
 			// Player sprite screen position limits and map scrolling
 			if (player_x < display_w / 4)
 			{
-				player_start_position_difference_x += player_speed;
+				location_offset_x += player_speed;
 				player_x = display_w / 4;
 			}
 			else if (player_x > display_w - display_w / 4 - player_w)
 			{
-				player_start_position_difference_x -= player_speed;
+				location_offset_x -= player_speed;
 				player_x = display_w - display_w / 4 - player_w;
 			}
 
 			if (player_y < display_h / 4)
 			{
-				player_start_position_difference_y += player_speed;
+				location_offset_y += player_speed;
 				player_y = display_h / 4;
 			}
 			else if (player_y > display_h - display_w / 4 - player_h)
 			{
-				player_start_position_difference_y -= player_speed;
+				location_offset_y -= player_speed;
 				player_y = display_h - display_w / 4 - player_h;
 			}
 
@@ -372,7 +421,7 @@ void draw_map(int map[32][32], ALLEGRO_BITMAP* tileset)
 				tile_x = tile_id;
 				tile_y = 0;
 			}
-			al_draw_bitmap_region(tileset, tile_x * tile_size, tile_y * tile_size, tile_size, tile_size, i * tile_size + player_start_position_difference_x, j * tile_size + player_start_position_difference_y, NULL);
+			al_draw_bitmap_region(tileset, tile_x * tile_size, tile_y * tile_size, tile_size, tile_size, i * tile_size + location_offset_x, j * tile_size + location_offset_y, NULL);
 		}
 	}
 }
