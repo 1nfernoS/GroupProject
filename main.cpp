@@ -9,6 +9,7 @@
 #include<allegro5/allegro_font.h>
 #include<allegro5/allegro_ttf.h>
 #include<allegro5/allegro_image.h>
+#include "map_generation.h"
 
 // General properties
 bool gameloop = true;
@@ -38,12 +39,11 @@ bool moving = false, sprinting = false;
 
 // World properties
 const int tile_size = 32;
+const int overworld_size = 64;
 int tilemap_w;
 int location_offset_x = 0, location_offset_y = 0;
-int map_index_x = 0, map_index_y = 0;
-int map[32][32] = { 0 };
 
-void load_map(const char* filename)
+void load_map(short map[64][64], const char* filename)
 {
 	std::stringstream sstream;
 	int map_width = 0, map_x = 0, map_y = 0;
@@ -82,7 +82,7 @@ void load_map(const char* filename)
 	}
 }
 
-void draw_map(int map[32][32], ALLEGRO_BITMAP* tileset);
+void draw_map(short map[64][64], ALLEGRO_BITMAP* tileset);
 
 int main()
 {
@@ -128,7 +128,8 @@ int main()
 
 	ALLEGRO_BITMAP* player = al_load_bitmap("Data/Sprites/pc_base.png");
 
-	load_map("world.map");
+	short map[64][64] = { 0 };
+	load_map(map, "world.map");
 
 	// Keyboard
 	al_install_keyboard();
@@ -364,11 +365,17 @@ int main()
 			ss << "DX = " << player_dx;
 			al_draw_text(advpix, white, 100, 5, NULL, ss.str().c_str());
 			ss.str(std::string());
+			ss << "Location Offset X = " << location_offset_x;
+			al_draw_text(advpix, white, 170, 5, NULL, ss.str().c_str());
+			ss.str(std::string());
 			ss << "Y = " << player_y;
 			al_draw_text(advpix, white, 5, 15, NULL, ss.str().c_str());
 			ss.str(std::string());
 			ss << "DY = " << player_dy;
 			al_draw_text(advpix, white, 100, 15, NULL, ss.str().c_str());
+			ss.str(std::string());
+			ss << "Location Offset Y = " << location_offset_y;
+			al_draw_text(advpix, white, 170, 15, NULL, ss.str().c_str());
 			ss.str(std::string());
 			ss << "Moving = " << moving;
 			al_draw_text(advpix, white, 5, 25, NULL, ss.str().c_str());
@@ -397,13 +404,13 @@ int main()
 	return 0;
 }
 
-void draw_map(int map[32][32], ALLEGRO_BITMAP* tileset)
+void draw_map(short map[64][64], ALLEGRO_BITMAP* tileset)
 {
-	int tile_id, tile_x = 0, tile_y = 0;
+	short tile_id, tilemap_x = 0, tilemap_y = 0, tile_pos_x, tile_pos_y;
 	float id_to_row_number_ratio;
-	for (short int i = 0; i < 32; i++)
+	for (short i = 0; i < overworld_size; i++)
 	{
-		for (short int j = 0; j < 32; j++)
+		for (short j = 0; j < overworld_size; j++)
 		{
 			tile_id = map[i][j];
 			if (tile_id == -1)
@@ -412,16 +419,21 @@ void draw_map(int map[32][32], ALLEGRO_BITMAP* tileset)
 			}
 			if (tile_id >= tilemap_w)
 			{
-				tile_x = tile_id - tilemap_w;
+				tilemap_x = tile_id - tilemap_w;
 				id_to_row_number_ratio = tile_id / tilemap_w;
-				tile_y = (int)id_to_row_number_ratio;
+				tilemap_y = (int)id_to_row_number_ratio;
 			}
 			else
 			{
-				tile_x = tile_id;
-				tile_y = 0;
+				tilemap_x = tile_id;
+				tilemap_y = 0;
 			}
-			al_draw_bitmap_region(tileset, tile_x * tile_size, tile_y * tile_size, tile_size, tile_size, i * tile_size + location_offset_x, j * tile_size + location_offset_y, NULL);
+			tile_pos_x = i * tile_size - (overworld_size * tile_size - display_w) / 2 + location_offset_x;
+			tile_pos_y = j * tile_size - (overworld_size * tile_size - display_h) / 2 + location_offset_y;
+			if (tile_pos_x + tile_size > 0 && tile_pos_x < display_w && tile_pos_y + tile_size > 0 && tile_pos_y < display_h)
+			{
+				al_draw_bitmap_region(tileset, tilemap_x * tile_size, tilemap_y * tile_size, tile_size, tile_size, tile_pos_x, tile_pos_y, NULL);
+			}
 		}
 	}
 }
