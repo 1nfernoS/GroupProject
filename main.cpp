@@ -11,11 +11,8 @@
 #include<allegro5/allegro_image.h>
 #include "map_generation.h"
 
-// General properties
-bool gameloop = true;
-
 // Display properties
-int display_w = 800, display_h = 600;
+short display_w = 800, display_h = 600;
 
 float fps = 60.0f;
 
@@ -29,24 +26,24 @@ enum directions : char
 };
 
 // Player properties
-const int player_w = 32, player_h = 64;
+const short player_w = 32, player_h = 64;
 float player_x = display_w / 2 - 16, player_y = display_h / 2 - 32;
-int player_dir = DOWN;
+char player_dir = DOWN;
 const float player_walk_speed = 2, player_sprint_speed = 3;
 float player_speed = 2;
-int player_dx = 0, player_dy = 0;
+char player_dx = 0, player_dy = 0;
 bool moving = false, sprinting = false;
 
 // World properties
-const int tile_size = 32;
-const int overworld_size = 64;
-int tilemap_w;
-int location_offset_x = 0, location_offset_y = 0;
+const char tile_size = 32;
+const short overworld_size = 64;
+short tilemap_w;
+short location_offset_x = 0, location_offset_y = 0;
 
 void load_map(short map[64][64], const char* filename)
 {
 	std::stringstream sstream;
-	int map_width = 0, map_x = 0, map_y = 0;
+	short map_width = 0, map_x = 0, map_y = 0;
 	sstream << "Game/" << filename;
 	std::ifstream mapfile(sstream.str());
 	sstream.str(std::string());
@@ -54,7 +51,7 @@ void load_map(short map[64][64], const char* filename)
 	{
 		std::string line;
 		getline(mapfile, line); // gets first line from the map file
-		for (unsigned int i = 0; i < line.length(); i++)
+		for (unsigned short i = 0; i < line.length(); i++)
 		{
 			if (line[i] == ' ') // gets map width in tiles
 			{
@@ -88,20 +85,19 @@ int main()
 {
 	std::stringstream ss;
 	
-	ALLEGRO_DISPLAY* display;
-
-	ALLEGRO_EVENT_QUEUE* queue;
-
-	ALLEGRO_TIMER* timer;
+	bool gameloop = true;
+	bool debug_info = true;
 
 	bool draw = true;
 
 	if (!al_init())
 	{
 		al_show_native_message_box(NULL, "Error", "Failed to initialize Allegro 5", NULL, NULL, ALLEGRO_MESSAGEBOX_ERROR);
+		return -1;
 	}
 
 	// Display creation
+	ALLEGRO_DISPLAY* display;
 	display = al_create_display(display_w, display_h);
 	if (!display)
 	{
@@ -155,9 +151,11 @@ int main()
 	ALLEGRO_JOYSTICK_STATE joy_state;
 
 	// Event queue creation
+	ALLEGRO_EVENT_QUEUE* queue;
 	queue = al_create_event_queue();
 
 	// Timer creation
+	ALLEGRO_TIMER* timer;
 	timer = al_create_timer(1.0 / fps);
 
 	al_register_event_source(queue, al_get_display_event_source(display));
@@ -179,6 +177,10 @@ int main()
 		if (event.type == ALLEGRO_EVENT_KEY_DOWN && event.keyboard.keycode == ALLEGRO_KEY_ESCAPE)
 		{
 			gameloop = false;
+		}
+		if (event.type == ALLEGRO_EVENT_KEY_DOWN && event.keyboard.keycode == ALLEGRO_KEY_F1)
+		{
+			debug_info = !debug_info;
 		}
 
 		if (al_get_num_joysticks() != 0)
@@ -358,34 +360,36 @@ int main()
 
 			al_draw_bitmap_region(player, player_dir * 32, 0, 32, 64, player_x, player_y, NULL);
 
-			// if (debug_mode)
-			ss << "X = " << player_x;
-			al_draw_text(advpix, white, 5, 5, NULL, ss.str().c_str());
-			ss.str(std::string());
-			ss << "DX = " << player_dx;
-			al_draw_text(advpix, white, 100, 5, NULL, ss.str().c_str());
-			ss.str(std::string());
-			ss << "Location Offset X = " << location_offset_x;
-			al_draw_text(advpix, white, 170, 5, NULL, ss.str().c_str());
-			ss.str(std::string());
-			ss << "Y = " << player_y;
-			al_draw_text(advpix, white, 5, 15, NULL, ss.str().c_str());
-			ss.str(std::string());
-			ss << "DY = " << player_dy;
-			al_draw_text(advpix, white, 100, 15, NULL, ss.str().c_str());
-			ss.str(std::string());
-			ss << "Location Offset Y = " << location_offset_y;
-			al_draw_text(advpix, white, 170, 15, NULL, ss.str().c_str());
-			ss.str(std::string());
-			ss << "Moving = " << moving;
-			al_draw_text(advpix, white, 5, 25, NULL, ss.str().c_str());
-			ss.str(std::string());
-			ss << "Sprinting = " << sprinting;
-			al_draw_text(advpix, white, 5, 35, NULL, ss.str().c_str());
-			ss.str(std::string());
-			ss << "Joysticks detected: " << al_get_num_joysticks();
-			al_draw_text(advpix, white, 5, 55, NULL, ss.str().c_str());
-			ss.str(std::string());
+			if (debug_info)
+			{
+				ss << "X = " << player_x;
+				al_draw_text(advpix, white, 5, 5, NULL, ss.str().c_str());
+				ss.str(std::string());
+				ss << "DX = " << player_dx;
+				al_draw_text(advpix, white, 100, 5, NULL, ss.str().c_str());
+				ss.str(std::string());
+				ss << "Location Offset X = " << location_offset_x;
+				al_draw_text(advpix, white, 170, 5, NULL, ss.str().c_str());
+				ss.str(std::string());
+				ss << "Y = " << player_y;
+				al_draw_text(advpix, white, 5, 15, NULL, ss.str().c_str());
+				ss.str(std::string());
+				ss << "DY = " << player_dy;
+				al_draw_text(advpix, white, 100, 15, NULL, ss.str().c_str());
+				ss.str(std::string());
+				ss << "Location Offset Y = " << location_offset_y;
+				al_draw_text(advpix, white, 170, 15, NULL, ss.str().c_str());
+				ss.str(std::string());
+				ss << "Moving = " << moving;
+				al_draw_text(advpix, white, 5, 25, NULL, ss.str().c_str());
+				ss.str(std::string());
+				ss << "Sprinting = " << sprinting;
+				al_draw_text(advpix, white, 5, 35, NULL, ss.str().c_str());
+				ss.str(std::string());
+				ss << "Joysticks detected: " << al_get_num_joysticks();
+				al_draw_text(advpix, white, 5, 55, NULL, ss.str().c_str());
+				ss.str(std::string());
+			}
 
 			al_flip_display();
 		}
@@ -421,7 +425,7 @@ void draw_map(short map[64][64], ALLEGRO_BITMAP* tileset)
 			{
 				tilemap_x = tile_id - tilemap_w;
 				id_to_row_number_ratio = tile_id / tilemap_w;
-				tilemap_y = (int)id_to_row_number_ratio;
+				tilemap_y = (short)id_to_row_number_ratio;
 			}
 			else
 			{

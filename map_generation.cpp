@@ -2,8 +2,6 @@
 #include<fstream>
 #include<stdlib.h>
 #include<time.h>
-#include <Windows.h>
-#include <winuser.h>
 
 void write_map(short map[64][64], short size, const char* filename)
 {
@@ -53,21 +51,23 @@ void generate_map_overworld(short size)
 		dirt_tile_x = rand() % 64;
 		dirt_tile_y = rand() % 64;
 		if (map[dirt_tile_x - 1][dirt_tile_y] != 0 || map[dirt_tile_x + 1][dirt_tile_y] || map[dirt_tile_x][dirt_tile_y - 1] || map[dirt_tile_x][dirt_tile_y + 1])
+		{
 			map[dirt_tile_x][dirt_tile_y] = 3;
+		}
 	}
 	// find upperleft corner coordinates, width and height of abandoned campsite
 	do
 	{
-		width = rand() % 2 + 4;
+		width = rand() % 4 + 2;
 		x = rand() % (size / 2) + (size / 4 - 1);
-		height = rand() % 2 + 4;
+		height = rand() % 4 + 2;
 		y = rand() % (size / 2) + (size / 4 - 1);
 	} while ((x + width > 21 && x < 42) && (y + height > 18 && y < 45));
 	//std::cout << "Campsite upperleft corner generated\n";
 	std::cout << "X: " << x << " Y: " << y << "\n";
 	std::cout << "Width: " << width << " Height: " << height << "\n";
 	// set corners of campsite
-	if (x + width < 64 && y + height < 64)
+	if (x + width < size && y + height < size)
 	{
 		map[x][y] = 10;
 		map[x + width][y] = 12;
