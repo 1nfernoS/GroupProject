@@ -9,7 +9,7 @@
 #include<allegro5/allegro_font.h>
 #include<allegro5/allegro_ttf.h>
 #include<allegro5/allegro_image.h>
-#include "map_generation.h"
+#include "map.h";
 
 // Display properties
 short display_w = 800, display_h = 600;
@@ -40,46 +40,20 @@ const short overworld_size = 64;
 short tilemap_w;
 short location_offset_x = 0, location_offset_y = 0;
 
-void load_map(short map[64][64], const char* filename)
-{
-	std::stringstream sstream;
-	short map_width = 0, map_x = 0, map_y = 0;
-	sstream << "Game/" << filename;
-	std::ifstream mapfile(sstream.str());
-	sstream.str(std::string());
-	if (mapfile.is_open())
-	{
-		std::string line;
-		getline(mapfile, line); // gets first line from the map file
-		for (unsigned short i = 0; i < line.length(); i++)
-		{
-			if (line[i] == ' ') // gets map width in tiles
-			{
-				map_width++;
-			}
-		}
-		map_width++;
-		mapfile.seekg(0, std::ios::beg); // returns to the beginning of the file
-		while (!mapfile.eof())
-		{
-			mapfile >> map[map_x][map_y];
-			map_x++;
+const char* overworld_map_filename = "world.map";
 
-			if (map_x >= map_width)
-			{
-				map_x = 0;
-				map_y++;
-			}
-		}
-		std::cout << "Loaded \"" << filename << "\" " << map_width << "x" << map_y << "\n";
+bool file_exists(const char* filename)
+{
+	std::ifstream file(filename);
+	if (file.good())
+	{
+		return true;
 	}
 	else
 	{
-		al_show_native_message_box(NULL, "Error", "Failed to open map file", NULL, NULL, ALLEGRO_MESSAGEBOX_ERROR);
+		return false;
 	}
 }
-
-void draw_map(short map[64][64], ALLEGRO_BITMAP* tileset);
 
 int main()
 {
@@ -125,7 +99,7 @@ int main()
 	ALLEGRO_BITMAP* player = al_load_bitmap("Data/Sprites/pc_base.png");
 
 	short map[64][64] = { 0 };
-	load_map(map, "world.map");
+	map_load(map, overworld_map_filename);
 
 	// Keyboard
 	al_install_keyboard();
@@ -356,7 +330,7 @@ int main()
 			draw = false;
 			al_clear_to_color(black);
 
-			draw_map(map, tilemap);
+			map_draw(tile_size, map, overworld_size, tilemap, tilemap_w, location_offset_x, location_offset_y);
 
 			al_draw_bitmap_region(player, player_dir * 32, 0, 32, 64, player_x, player_y, NULL);
 
@@ -406,38 +380,4 @@ int main()
 	al_destroy_display(display);
 
 	return 0;
-}
-
-void draw_map(short map[64][64], ALLEGRO_BITMAP* tileset)
-{
-	short tile_id, tilemap_x = 0, tilemap_y = 0, tile_pos_x, tile_pos_y;
-	float id_to_row_number_ratio;
-	for (short i = 0; i < overworld_size; i++)
-	{
-		for (short j = 0; j < overworld_size; j++)
-		{
-			tile_id = map[i][j];
-			if (tile_id == -1)
-			{
-				continue;
-			}
-			if (tile_id >= tilemap_w)
-			{
-				tilemap_x = tile_id - tilemap_w;
-				id_to_row_number_ratio = tile_id / tilemap_w;
-				tilemap_y = (short)id_to_row_number_ratio;
-			}
-			else
-			{
-				tilemap_x = tile_id;
-				tilemap_y = 0;
-			}
-			tile_pos_x = i * tile_size - (overworld_size * tile_size - display_w) / 2 + location_offset_x;
-			tile_pos_y = j * tile_size - (overworld_size * tile_size - display_h) / 2 + location_offset_y;
-			if (tile_pos_x + tile_size > 0 && tile_pos_x < display_w && tile_pos_y + tile_size > 0 && tile_pos_y < display_h)
-			{
-				al_draw_bitmap_region(tileset, tilemap_x * tile_size, tilemap_y * tile_size, tile_size, tile_size, tile_pos_x, tile_pos_y, NULL);
-			}
-		}
-	}
 }
