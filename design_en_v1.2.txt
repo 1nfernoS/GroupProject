@@ -1,4 +1,4 @@
-//Design document draft v0.1.2
+//Design document draft v1.2
 
 		Pointless Expedition
 
