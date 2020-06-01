@@ -28,17 +28,14 @@ void map_write(short map[64][64], short size, const char* filename)
 			}
 		}
 		mapfile.close();
-		std::cout << "Successfully created map file " << filename << "\n";
+		std::cout << "Created \"" << filename << "\" " << "\n";
 	}
 }
 
 void map_load(short map[64][64], const char* filename)
 {
-	std::stringstream sstream;
 	short map_width = 0, map_x = 0, map_y = 0;
-	sstream << "Game/" << filename;
-	std::ifstream mapfile(sstream.str());
-	sstream.str(std::string());
+	std::ifstream mapfile(filename);
 	if (mapfile.is_open())
 	{
 		std::string line;
@@ -67,11 +64,14 @@ void map_load(short map[64][64], const char* filename)
 	}
 	else
 	{
-		al_show_native_message_box(NULL, "Error", "Failed to open map file", NULL, NULL, ALLEGRO_MESSAGEBOX_ERROR);
+		std::stringstream sstream;
+		sstream << "Failed to open map file " << filename;
+		al_show_native_message_box(NULL, "Error", sstream.str().c_str(), NULL, NULL, ALLEGRO_MESSAGEBOX_ERROR);
+		sstream.str(std::string());
 	}
 }
 
-void map_generate_overworld(short size)
+void map_generate_overworld(short size, const char* filename)
 {
 	srand(time(NULL));
 	short map[64][64] = { 0 };
@@ -146,7 +146,7 @@ void map_generate_overworld(short size)
 			}
 		}
 	}
-	map_write(map, size, "Game/world.map"); // Write map to the file
+	map_write(map, size, filename); // Write map to the file
 }
 
 void map_draw(short tile_size, short map[64][64], short map_size, ALLEGRO_BITMAP* tileset, short tilemap_width, short location_offset_x, short location_offset_y)

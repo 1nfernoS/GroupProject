@@ -9,7 +9,7 @@
 #include<allegro5/allegro_font.h>
 #include<allegro5/allegro_ttf.h>
 #include<allegro5/allegro_image.h>
-#include "map.h";
+#include "map.h"
 
 // Display properties
 short display_w = 800, display_h = 600;
@@ -99,7 +99,13 @@ int main()
 	ALLEGRO_BITMAP* player = al_load_bitmap("Data/Sprites/pc_base.png");
 
 	short map[64][64] = { 0 };
-	map_load(map, overworld_map_filename);
+	ss << "Game/" << overworld_map_filename;
+	if (!file_exists(ss.str().c_str()))
+	{
+		map_generate_overworld(overworld_size, ss.str().c_str());
+	}
+	map_load(map, ss.str().c_str());
+	ss.str(std::string());
 
 	// Keyboard
 	al_install_keyboard();
