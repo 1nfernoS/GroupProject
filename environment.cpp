@@ -89,8 +89,8 @@ void environment_generate_overworld_props(short map[64][64], short map_size, Env
 		{
 			if (map[i][j] == 2)
 			{
-				env_x = i * 32;
-				env_y = j * 32;
+				env_x = i * 32 - (map_size * tile_size - display_w) / 2;
+				env_y = j * 32 - (map_size * tile_size - display_h) / 2;
 				std::cout << env_x << " | " << env_y << "\n";
 				Environment environment_element(0, env_x, env_x, sprites[0], true);
 				props[num_props] = environment_element;
