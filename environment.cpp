@@ -89,10 +89,10 @@ void environment_generate_overworld_props(short map[64][64], short map_size, Env
 		{
 			if (map[i][j] == 2)
 			{
-				env_x = i * 32 - (map_size * tile_size - display_w) / 2;
-				env_y = j * 32 - (map_size * tile_size - display_h) / 2;
+				env_x = i * tile_size - (map_size * tile_size - display_w) / 2;
+				env_y = j * tile_size - (map_size * tile_size - display_h) / 2;
 				std::cout << env_x << " | " << env_y << "\n";
-				Environment environment_element(0, env_x, env_x, sprites[0], true);
+				Environment environment_element(0, env_x, env_y, sprites[0], true);
 				props[num_props] = environment_element;
 				campfire_placed = true;
 			}
@@ -113,18 +113,21 @@ void environment_draw(Environment props[1], short location_offset_x, short locat
 {
 	for (short i = 0; i < 1; i++)
 	{
-		if (behind_player)
+		if ((props[i].X + props[i].Width > 0 && props[i].X < display_w) || (props[i].Y + props[i].Height > 0 && props[i].Y < display_h))
 		{
-			if (props[i].Y + location_offset_y + props[i].Height < player_y + player_height || props[i].Walkable)
+			if (behind_player)
 			{
-				props[i].Draw(location_offset_x, location_offset_y);
+				if (props[i].Y + location_offset_y + props[i].Height < player_y + player_height || props[i].Walkable)
+				{
+					props[i].Draw(location_offset_x, location_offset_y);
+				}
 			}
-		}
-		else
-		{
-			if (props[i].Y + location_offset_y + props[i].Height > player_y + player_height && !props[i].Walkable)
+			else
 			{
-				props[i].Draw(location_offset_x, location_offset_y);
+				if (props[i].Y + location_offset_y + props[i].Height > player_y + player_height && !props[i].Walkable)
+				{
+					props[i].Draw(location_offset_x, location_offset_y);
+				}
 			}
 		}
 	}
