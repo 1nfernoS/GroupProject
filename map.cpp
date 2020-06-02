@@ -17,18 +17,18 @@ void map_write(short map[64][64], short size, const char* filename)
 			for (short j = 0; j < size; j++)
 			{
 				mapfile << map[i][j];
-				if (j < 63)
+				if (j < size - 1)
 				{
 					mapfile << ' ';
 				}
 			}
-			if (i < 63)
+			if (i < size - 1)
 			{
 				mapfile << "\n";
 			}
 		}
 		mapfile.close();
-		std::cout << "Created \"" << filename << "\" " << "\n";
+		std::cout << "Created \"" << filename << "\"\n";
 	}
 }
 

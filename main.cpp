@@ -9,7 +9,9 @@
 #include<allegro5/allegro_font.h>
 #include<allegro5/allegro_ttf.h>
 #include<allegro5/allegro_image.h>
+#include "common.h"
 #include "map.h"
+#include "environment.h"
 
 // Display properties
 short display_w = 800, display_h = 600;
@@ -39,8 +41,16 @@ const char tile_size = 32;
 const short overworld_size = 64;
 short tilemap_w;
 short location_offset_x = 0, location_offset_y = 0;
+const char num_props_types = 8;
+const char num_props = 1;
+
+enum props_sprites : char
+{
+	CAMPFIRE = 0, TREE_STUMP, TREE_A, TREE_B, TREE_C, ROCK_A, ROCK_B, ROCK_C
+};
 
 const char* overworld_map_filename = "world.map";
+const char* overworld_props_filename = "overworld_props.epf";
 
 bool file_exists(const char* filename)
 {
@@ -96,7 +106,7 @@ int main()
 	ALLEGRO_BITMAP* tilemap = al_load_bitmap("Data/Sprites/tilemap_overworld.png");
 	tilemap_w = al_get_bitmap_width(tilemap) / tile_size;
 
-	ALLEGRO_BITMAP* player = al_load_bitmap("Data/Sprites/pc_base.png");
+	ALLEGRO_BITMAP* player = al_load_bitmap("Data/Sprites/pc_male_pants.png");
 
 	short map[64][64] = { 0 };
 	ss << "Game/" << overworld_map_filename;
@@ -106,6 +116,33 @@ int main()
 	}
 	map_load(map, ss.str().c_str());
 	ss.str(std::string());
+
+	ALLEGRO_BITMAP* props_sprites[8] =
+	{
+		al_load_bitmap("Data/Sprites/campfire.png"),
+		al_load_bitmap("Data/Sprites/tree_stump.png"),
+		al_load_bitmap("Data/Sprites/tree_a.png"),
+		al_load_bitmap("Data/Sprites/tree_b.png"),
+		al_load_bitmap("Data/Sprites/tree_c.png"),
+		al_load_bitmap("Data/Sprites/rock_a.png"),
+		al_load_bitmap("Data/Sprites/rock_b.png"),
+		al_load_bitmap("Data/Sprites/rock_c.png")
+	};
+
+	extern ALLEGRO_BITMAP* campfire;
+
+	Environment props[num_props];
+	ss << "Game/" << overworld_props_filename;
+	if (!file_exists(ss.str().c_str()))
+	{
+		environment_generate_overworld_props(map, overworld_size, props, props_sprites, ss.str().c_str());
+	}
+	ss.str(std::string());
+
+	for (int i = 0; i < num_props; i++)
+	{
+		Environment props;
+	}
 
 	// Keyboard
 	al_install_keyboard();
@@ -338,7 +375,11 @@ int main()
 
 			map_draw(tile_size, map, overworld_size, tilemap, tilemap_w, location_offset_x, location_offset_y);
 
+			environment_draw(props, location_offset_x, location_offset_y, player_y, player_h, true);
+
 			al_draw_bitmap_region(player, player_dir * 32, 0, 32, 64, player_x, player_y, NULL);
+
+			environment_draw(props, location_offset_x, location_offset_y, player_y, player_h, false);
 
 			if (debug_info)
 			{
@@ -377,6 +418,10 @@ int main()
 
 	// Freeing memory
 	al_destroy_bitmap(player);
+	for (short i = 0; i < num_props_types; i++)
+	{
+		al_destroy_bitmap(props_sprites[i]);
+	}
 	al_destroy_bitmap(tilemap);
 	al_destroy_font(advpix);
 	al_destroy_event_queue(queue);

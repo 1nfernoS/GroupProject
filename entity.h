@@ -6,12 +6,14 @@
 class Entity
 {
 protected:
-	ALLEGRO_BITMAP *Sprite;
+	ALLEGRO_BITMAP* Sprite;
 public:
-	int Width, Height;
+	unsigned short Width, Height;
 	float X, Y;
 
-	virtual void Draw();
+	void SetSprite(ALLEGRO_BITMAP* sprite);
+
+	virtual void Draw(short offset_x, short offset_y);
 };
 
 #endif
