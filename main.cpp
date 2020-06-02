@@ -129,14 +129,13 @@ int main()
 		al_load_bitmap("Data/Sprites/rock_c.png")
 	};
 
-	extern ALLEGRO_BITMAP* campfire;
-
 	Environment props[num_props];
 	ss << "Game/" << overworld_props_filename;
 	if (!file_exists(ss.str().c_str()))
 	{
 		environment_generate_overworld_props(map, overworld_size, props, props_sprites, ss.str().c_str());
 	}
+	environment_load(props, props_sprites, ss.str().c_str());
 	ss.str(std::string());
 
 	for (int i = 0; i < num_props; i++)

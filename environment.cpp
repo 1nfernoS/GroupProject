@@ -52,7 +52,7 @@ void environment_write(Environment props[1], short num_props, const char* filena
 	}
 }
 
-void environment_load(Environment props[1], const char* filename)
+void environment_load(Environment props[1], ALLEGRO_BITMAP* sprites[8], const char* filename)
 {
 	short num_props;
 	std::ifstream propsfile(filename);
@@ -62,7 +62,7 @@ void environment_load(Environment props[1], const char* filename)
 		for (short i = 0; i < num_props; i++)
 		{
 			propsfile >> props[i].Id;
-			props[i].SetSprite(props_sprites[props[i].Id]);
+			props[i].SetSprite(sprites[props[i].Id]);
 			propsfile >> props[i].X;
 			propsfile >> props[i].Y;
 			propsfile >> props[i].Walkable;
@@ -78,7 +78,7 @@ void environment_load(Environment props[1], const char* filename)
 	}
 }
 
-void environment_generate_overworld_props(short map[64][64], short map_size, Environment props[1], ALLEGRO_BITMAP* props_sprites[8], const char* filename)
+void environment_generate_overworld_props(short map[64][64], short map_size, Environment props[1], ALLEGRO_BITMAP* sprites[8], const char* filename)
 {
 	float env_x, env_y;
 	char num_props = 0;
@@ -89,9 +89,10 @@ void environment_generate_overworld_props(short map[64][64], short map_size, Env
 		{
 			if (map[i][j] == 2)
 			{
-				env_x = j * tile_size;
-				env_y = i * tile_size;
-				Environment environment_element(0, env_x, env_x, props_sprites[0], true);
+				env_x = i * 32;
+				env_y = j * 32;
+				std::cout << env_x << " | " << env_y << "\n";
+				Environment environment_element(0, env_x, env_x, sprites[0], true);
 				props[num_props] = environment_element;
 				campfire_placed = true;
 			}

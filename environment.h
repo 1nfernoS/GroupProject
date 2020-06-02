@@ -18,7 +18,7 @@ public:
 
 void environment_write(Environment props[1], short num_props, const char* filename);
 
-void environment_load(Environment props[1], const char* filename);
+void environment_load(Environment props[1], ALLEGRO_BITMAP* sprites[8], const char* filename);
 
 void environment_generate_overworld_props(short map[64][64], short map_size, Environment props[1], ALLEGRO_BITMAP* props_sprites[8], const char* filename);
 
