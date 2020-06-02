@@ -105,9 +105,6 @@ void map_generate_overworld(short size, const char* filename)
 		height = rand() % 4 + 2;
 		y = rand() % (size / 2) + (size / 4 - 1);
 	} while ((x + width > 21 && x < 42) && (y + height > 18 && y < 45));
-	//std::cout << "Campsite upperleft corner generated\n";
-	std::cout << "X: " << x << " Y: " << y << "\n";
-	std::cout << "Width: " << width << " Height: " << height << "\n";
 	// set corners of campsite
 	if (x + width < size && y + height < size)
 	{
