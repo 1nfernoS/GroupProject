@@ -1,6 +1,8 @@
 #include<iostream>
 #include<fstream>
 #include<sstream>
+#include<stdlib.h>
+#include<time.h>
 #include<allegro5/allegro_native_dialog.h>
 #include "common.h"
 #include "environment.h"
@@ -24,7 +26,7 @@ Environment::Environment(short id, float x, float y, ALLEGRO_BITMAP* sprite, boo
 
 Environment::~Environment()
 {
-	std::cout << "Environment destructed\n";
+
 }
 
 void Environment::Draw(short offset_x, short offset_y)
@@ -32,7 +34,7 @@ void Environment::Draw(short offset_x, short offset_y)
 	al_draw_bitmap(Sprite, X + offset_x, Y + offset_y, NULL);
 }
 
-void environment_write(Environment props[1], short num_props, const char* filename)
+void environment_write(Environment props[2], short num_props, const char* filename)
 {
 	std::ofstream propsfile;
 	propsfile.open(filename);
@@ -52,7 +54,7 @@ void environment_write(Environment props[1], short num_props, const char* filena
 	}
 }
 
-void environment_load(Environment props[1], ALLEGRO_BITMAP* sprites[8], const char* filename)
+void environment_load(Environment props[2], ALLEGRO_BITMAP* sprites[8], const char* filename)
 {
 	short num_props;
 	std::ifstream propsfile(filename);
@@ -78,11 +80,13 @@ void environment_load(Environment props[1], ALLEGRO_BITMAP* sprites[8], const ch
 	}
 }
 
-void environment_generate_overworld_props(short map[64][64], short map_size, Environment props[1], ALLEGRO_BITMAP* sprites[8], const char* filename)
+void environment_generate_overworld_props(short map[64][64], short map_size, Environment props[2], ALLEGRO_BITMAP* sprites[8], const char* filename)
 {
+	srand(time(NULL));
 	float env_x, env_y;
 	char num_props = 0;
-	bool campfire_placed = false;
+	bool campfire_placed = false, seat_placed = false;
+	// camsite props
 	for (short i = 0; i < map_size; i++)
 	{
 		for (short j = 0; j < map_size; j++)
@@ -91,33 +95,45 @@ void environment_generate_overworld_props(short map[64][64], short map_size, Env
 			{
 				env_x = i * tile_size - (map_size * tile_size - display_w) / 2;
 				env_y = j * tile_size - (map_size * tile_size - display_h) / 2;
-				std::cout << env_x << " | " << env_y << "\n";
-				Environment environment_element(0, env_x, env_y, sprites[0], true);
-				props[num_props] = environment_element;
+				Environment campfire(0, env_x, env_y, sprites[0], true);
+				props[0] = campfire;
 				campfire_placed = true;
 			}
-			if (campfire_placed)
+			if (map[i][j] == 11)
+			{
+				short sprite = rand() % 2 + 4;
+				env_x = (i - 1) * tile_size - (map_size * tile_size - display_w) / 2;
+				env_y = j * tile_size - (map_size * tile_size - display_h) / 2;
+				if (sprite == 4)
+				{
+					env_y -= 32;
+				}
+				Environment seat(sprite, env_x, env_y, sprites[sprite], false);
+				props[1] = seat;
+				seat_placed = true;
+			}
+			if (campfire_placed && seat_placed)
 			{
 				break;
 			}
 		}
-		if (campfire_placed)
+		if (campfire_placed && seat_placed)
 		{
 			break;
 		}
 	}
-	environment_write(props, 1, filename);
+	environment_write(props, 2, filename);
 }
 
-void environment_draw(Environment props[1], short location_offset_x, short location_offset_y, float player_y, float player_height, bool behind_player)
+void environment_draw(Environment props[2], short num_props, short location_offset_x, short location_offset_y, float player_y, float player_height, bool behind_player)
 {
-	for (short i = 0; i < 1; i++)
+	for (short i = 0; i < num_props; i++)
 	{
 		if ((props[i].X + props[i].Width > 0 && props[i].X < display_w) || (props[i].Y + props[i].Height > 0 && props[i].Y < display_h))
 		{
 			if (behind_player)
 			{
-				if (props[i].Y + location_offset_y + props[i].Height < player_y + player_height || props[i].Walkable)
+				if (props[i].Y + location_offset_y + props[i].Height <= player_y + player_height || props[i].Walkable)
 				{
 					props[i].Draw(location_offset_x, location_offset_y);
 				}

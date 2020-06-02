@@ -42,11 +42,11 @@ const short overworld_size = 64;
 short tilemap_w;
 short location_offset_x = 0, location_offset_y = 0;
 const char num_props_types = 8;
-const char num_props = 1;
+const char num_props = 2;
 
 enum props_sprites : char
 {
-	CAMPFIRE = 0, TREE_STUMP, TREE_A, TREE_B, TREE_C, ROCK_A, ROCK_B, ROCK_C
+	CAMPFIRE = 0, TREE_A, TREE_B, TREE_C, TREE_STUMP, ROCK_A, ROCK_B, ROCK_C
 };
 
 const char* overworld_map_filename = "world.map";
@@ -120,10 +120,10 @@ int main()
 	ALLEGRO_BITMAP* props_sprites[8] =
 	{
 		al_load_bitmap("Data/Sprites/campfire.png"),
-		al_load_bitmap("Data/Sprites/tree_stump.png"),
 		al_load_bitmap("Data/Sprites/tree_a.png"),
 		al_load_bitmap("Data/Sprites/tree_b.png"),
 		al_load_bitmap("Data/Sprites/tree_c.png"),
+		al_load_bitmap("Data/Sprites/tree_stump.png"),
 		al_load_bitmap("Data/Sprites/rock_a.png"),
 		al_load_bitmap("Data/Sprites/rock_b.png"),
 		al_load_bitmap("Data/Sprites/rock_c.png")
@@ -374,11 +374,11 @@ int main()
 
 			map_draw(tile_size, map, overworld_size, tilemap, tilemap_w, location_offset_x, location_offset_y);
 
-			environment_draw(props, location_offset_x, location_offset_y, player_y, player_h, true);
+			environment_draw(props, 2, location_offset_x, location_offset_y, player_y, player_h, true);
 
 			al_draw_bitmap_region(player, player_dir * 32, 0, 32, 64, player_x, player_y, NULL);
 
-			environment_draw(props, location_offset_x, location_offset_y, player_y, player_h, false);
+			environment_draw(props, 2, location_offset_x, location_offset_y, player_y, player_h, false);
 
 			if (debug_info)
 			{
